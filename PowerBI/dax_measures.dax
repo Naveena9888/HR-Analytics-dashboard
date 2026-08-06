@@ -1,0 +1,129 @@
+// ============================================================================
+// HR ANALYTICS & EMPLOYEE ATTRITION PROJECT
+// Power BI DAX Measures Library
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 1. CORE EXECUTIVE KPI MEASURES
+// ----------------------------------------------------------------------------
+
+Total Employees = 
+COUNT(HR_Cleaned[EmployeeNumber])
+
+Attrition Count = 
+CALCULATE(
+    COUNT(HR_Cleaned[EmployeeNumber]),
+    HR_Cleaned[Attrition] = "Yes"
+)
+
+Attrition Rate % = 
+DIVIDE(
+    [Attrition Count],
+    [Total Employees],
+    0
+)
+
+Average Salary = 
+AVERAGE(HR_Cleaned[MonthlyIncome])
+
+Average Age = 
+AVERAGE(HR_Cleaned[Age])
+
+Average Tenure = 
+AVERAGE(HR_Cleaned[YearsAtCompany])
+
+
+// ----------------------------------------------------------------------------
+// 2. DEMOGRAPHIC & SEGMENTATION MEASURES
+// ----------------------------------------------------------------------------
+
+Male Employees = 
+CALCULATE(
+    COUNT(HR_Cleaned[EmployeeNumber]),
+    HR_Cleaned[Gender] = "Male"
+)
+
+Female Employees = 
+CALCULATE(
+    COUNT(HR_Cleaned[EmployeeNumber]),
+    HR_Cleaned[Gender] = "Female"
+)
+
+Male Attrition Rate % = 
+DIVIDE(
+    CALCULATE([Attrition Count], HR_Cleaned[Gender] = "Male"),
+    [Male Employees],
+    0
+)
+
+Female Attrition Rate % = 
+DIVIDE(
+    CALCULATE([Attrition Count], HR_Cleaned[Gender] = "Female"),
+    [Female Employees],
+    0
+)
+
+Overtime Employees = 
+CALCULATE(
+    COUNT(HR_Cleaned[EmployeeNumber]),
+    HR_Cleaned[OverTime] = "Yes"
+)
+
+Overtime Attrition Rate % = 
+DIVIDE(
+    CALCULATE([Attrition Count], HR_Cleaned[OverTime] = "Yes"),
+    [Overtime Employees],
+    0
+)
+
+Average Job Satisfaction = 
+AVERAGE(HR_Cleaned[JobSatisfaction])
+
+Average Work Life Balance = 
+AVERAGE(HR_Cleaned[WorkLifeBalance])
+
+
+// ----------------------------------------------------------------------------
+// 3. DEPARTMENTAL & COMPARATIVE MEASURES
+// ----------------------------------------------------------------------------
+
+Salary by Department = 
+CALCULATE(
+    AVERAGE(HR_Cleaned[MonthlyIncome]),
+    ALLEXCEPT(HR_Cleaned, HR_Cleaned[Department])
+)
+
+Department Attrition Rate % = 
+DIVIDE(
+    CALCULATE([Attrition Count]),
+    CALCULATE([Total Employees]),
+    0
+)
+
+Target Attrition Rate % = 0.10 // 10% Benchmark Target
+
+
+// ----------------------------------------------------------------------------
+// 4. DYNAMIC TITLES & INTERACTIVE MEASURES
+// ----------------------------------------------------------------------------
+
+Selected Department = 
+SELECTEDVALUE(HR_Cleaned[Department], "All Departments")
+
+Dynamic KPI Title = 
+"Executive HR Overview - " & [Selected Department]
+
+Attrition Status Color = 
+IF(
+    [Attrition Rate %] > 0.18, 
+    "#E74C3C", // Red highlight for high risk (>18%)
+    "#2ECC71"  # Green highlight for normal (<18%)
+)
+
+High Risk Attrition Count = 
+CALCULATE(
+    COUNT(HR_Cleaned[EmployeeNumber]),
+    HR_Cleaned[OverTime] = "Yes",
+    HR_Cleaned[JobSatisfaction] <= 2,
+    HR_Cleaned[MonthlyIncome] < 3500
+)
